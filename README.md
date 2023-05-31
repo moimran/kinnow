@@ -5,6 +5,9 @@ GUI based network deployment
 set JWT_SECRET_KEY=hello123
 set JWT_REFRESH_SECRET_KEY=hello4321
 
+# Kinnow API docs link
+http://localhost:8000/api/docs/
+
 ## poetry common commands
 poetry install # install dependencies
 poetry shell # activate virtual environment
