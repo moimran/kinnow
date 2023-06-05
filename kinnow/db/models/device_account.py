@@ -1,4 +1,4 @@
-from db.models.common import TimestampModel, UUIDModel
+from api.common import TimestampModel, UUIDModel
 from sqlmodel import Field, SQLModel
 from sqlalchemy import UniqueConstraint, TEXT, JSON
 
