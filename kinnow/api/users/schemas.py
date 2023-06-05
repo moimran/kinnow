@@ -1,26 +1,26 @@
-from uuid import UUID
-from pydantic import BaseModel, Field
+from api.common import TimestampModel, UUIDModel
+from sqlmodel import Field, SQLModel
+from pydantic import EmailStr
 
 
-class TokenSchema(BaseModel):
-    access_token: str
-    refresh_token: str
+class UserOutSchema(UUIDModel):
+    username: str
+    email: EmailStr
+    full_name: str
+    disabled: bool
 
 
-class TokenPayload(BaseModel):
-    sub: str
-    exp: int
-
-
-class UserAuth(BaseModel):
-    email: str = Field(..., description="user email")
-    password: str = Field(..., min_length=5, max_length=24, description="user password")
-
-
-class UserOut(BaseModel):
-    id: UUID
-    email: str
-
-
-class SystemUser(UserOut):
+class UserInSchema(SQLModel):
+    username: str
+    email: EmailStr
+    full_name: str
     password: str
+
+
+class Token(SQLModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(SQLModel):
+    username: str | None = None

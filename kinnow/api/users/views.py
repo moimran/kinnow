@@ -1,69 +1,68 @@
-from fastapi import FastAPI, status, HTTPException
-from fastapi.responses import RedirectResponse
-from fastapi.security import OAuth2PasswordRequestForm
-from api.users.services import UserService
-from api.users.schemas import UserOut, UserAuth, TokenSchema, SystemUser
-from fastapi import APIRouter, Depends
-from db.db import db_session
-from sqlmodel.ext.asyncio.session import AsyncSession
-from typing import Any
-from utils import (
-    get_hashed_password,
-    create_access_token,
-    create_refresh_token,
-    verify_password,
+from datetime import timedelta
+from api.users.services import (
+    UserService,
+    get_current_active_user,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
 )
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from db.db import db_session
+
+from db.models.user import User
+
+from api.users.schemas import UserOutSchema, UserInSchema, Token
+
+from fastapi.security import OAuth2PasswordRequestForm
+
 
 router = APIRouter()
 
 
-@router.get("/", response_model=list[UserOut])
-async def get_users(
-    session: AsyncSession = Depends(db_session),
-) -> list[UserAuth]:
-    example_service = UserService(session=session)
-    return await example_service.get_all_users()
-
-
-@router.post("/", response_model=UserOut)
-async def create_user(
-    data: UserAuth,
-    session: AsyncSession = Depends(db_session),
-) -> Any:
-    example_service = UserService(session=session)
-    return await example_service.add_user(data)
-
-
-@router.post(
-    "/login",
-    summary="Create access and refresh tokens for user",
-    response_model=TokenSchema,
-)
-async def login(
+@router.post("/token", response_model=Token)
+async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(db_session),
 ):
-    example_service = UserService(session=session)
-    user = await example_service.get_user(form_data.username)
-    if user is None:
+    user_service = UserService(session=session)
+    user = await user_service.authenticate_user(form_data.username, form_data.password)
+    if not user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = await user_service.create_access_token(
+        data={"sub": user.get("username")}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
-    hashed_pass = user["password"]
-    if not verify_password(form_data.password, hashed_pass):
+
+@router.post("/signup", response_model=UserOutSchema)
+async def create_new_user(
+    userIn: UserInSchema, session: AsyncSession = Depends(db_session)
+):
+    # Verifica se o usuario ja existe
+    user_service = UserService(session=session)
+    user = await user_service.check_user(userIn)
+    if user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password"
+            status_code=409,
+            detail="Username and/or e-mail already exists",
         )
+    new_user = User(
+        username=userIn.username,
+        email=userIn.email,
+        full_name=userIn.full_name,
+        hashed_password=await user_service.get_password_hash(userIn.password),
+    )
+    session.add(new_user)
+    await session.commit()
+    await session.refresh(new_user)
+    return new_user
 
-    return {
-        "access_token": create_access_token(user["email"]),
-        "refresh_token": create_refresh_token(user["email"]),
-    }
 
-
-# @router.get(
-#     "/me", summary="Get details of currently logged in user", response_model=UserOut
-# )
-# async def get_me(user: SystemUser = Depends(get_current_user)):
-#     return user
+@router.get("/users/me/", response_model=UserOutSchema)
+async def read_users_me(current_user: User = Depends(get_current_active_user)):
+    return current_user

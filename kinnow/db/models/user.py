@@ -1,16 +1,16 @@
-from db.models.common import UUIDModel
+from api.common import TimestampModel, UUIDModel
 from sqlmodel import Field
 from sqlalchemy import UniqueConstraint
+from pydantic import EmailStr
+from typing import Optional
 
 
-class User(UUIDModel, table=True):
+class User(TimestampModel, UUIDModel, table=True):
 
-    __tablename__ = "Users"
+    __tablename__ = "User"
 
-    email: str = Field(nullable=False, max_length=50, index=True)
-    password: str = Field(nullable=False)
-
-    __table_args__ = (UniqueConstraint("email"),)
-
-    def __repr__(self):
-        return f"User(id={self.id}, email={self.email}, password={self.password})"
+    username: str
+    email: EmailStr
+    full_name: Optional[str] = ""
+    hashed_password: Optional[str] = ""
+    disabled: Optional[bool] = False
