@@ -10,13 +10,13 @@ class Settings(BaseSettings):
     """Application settings."""
 
     ENV: str = "dev"
-    HOST: str = "0.0.0.0"
+    HOST: str = "localhost"
     PORT: int = 8000
     _BASE_URL: str = f"https://{HOST}:{PORT}"
     # quantity of workers for uvicorn
     WORKERS_COUNT: int = 1
     # Enable uvicorn reloading
-    RELOAD: bool = True
+    RELOAD: bool = False
     # Database settings
     DB_HOST: str = "192.168.232.129"
     DB_PORT: int = 5432
