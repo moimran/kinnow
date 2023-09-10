@@ -1,0 +1,3 @@
+[submodule "kinnow/device_lib_repo/devicetype-library"]
+	path = kinnow/device_lib_repo/devicetype-library
+	url = https://github.com/netbox-community/devicetype-library.git

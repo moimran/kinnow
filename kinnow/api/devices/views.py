@@ -23,6 +23,7 @@ async def get_devices(
 async def create_device(
     data: DeviceSchema,
     session: AsyncSession = Depends(db_session),
+    current_user: User = Depends(get_current_active_user)
 ) -> Device:
     device_service = DeviceService(session=session)
     return await device_service.add_device(data)

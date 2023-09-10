@@ -8,13 +8,19 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-fastapi = {extras = ["all"], version = "^0.88.0"}
+fastapi = "0.103.1"
 sqlmodel = "^0.0.8"
 asyncpg = "^0.27.0"
 alembic = "^1.9.1"
 fastapi-users = {extras = ["sqlalchemy"], version = "^10.4.0"}
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 python-multipart = "^0.0.5"
+netbox-devicetype-importer = "^0.0.6"
+uvicorn = "^0.23.2"
+gitpython = "^3.1.35"
+pyyaml = "^6.0.1"
+types-pyyaml = "^6.0.12.11"
+python-dotenv = "^1.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
